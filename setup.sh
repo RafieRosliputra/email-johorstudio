@@ -4,9 +4,16 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
-mkdir -p dms/mail-data dms/mail-state dms/mail-logs dms/config roundcube/config roundcube/db
+mkdir -p dms/mail-data dms/mail-state dms/mail-logs dms/config/ssl roundcube/config roundcube/db
 
 [ -f mailserver.env ] || cp mailserver.env.example mailserver.env
+
+# Self-signed TLS cert for the mail server (internal/LAN; clients skip verify)
+if [ ! -f dms/config/ssl/cert.pem ]; then
+  openssl req -x509 -newkey rsa:2048 -nodes -days 3650 \
+    -subj "/CN=mail.johorstudio.com" \
+    -keyout dms/config/ssl/key.pem -out dms/config/ssl/cert.pem 2>/dev/null
+fi
 
 # Mailbox: noreply@johorstudio.com
 ACC=dms/config/postfix-accounts.cf
