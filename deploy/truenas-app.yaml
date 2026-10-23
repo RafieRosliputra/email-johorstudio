@@ -1,0 +1,39 @@
+# TrueNAS SCALE — Custom App compose for "mail" (absolute paths).
+# Install: Apps -> Custom App -> Install via YAML, OR:
+#   midclt call app.create '{"app_name":"mail","custom_app":true,"custom_compose_config_string":"<this file>"}'
+# Run ./setup.sh in /mnt/ssd/email-johorstudio first (dirs, mailbox, cert, config),
+# and fill RELAY_* in mailserver.env.
+services:
+  mailserver:
+    image: ghcr.io/docker-mailserver/docker-mailserver:14.0.0
+    container_name: dms
+    hostname: mail.johorstudio.com
+    env_file:
+      - /mnt/ssd/email-johorstudio/mailserver.env
+    ports:
+      - "1587:587"
+    volumes:
+      - /mnt/ssd/email-johorstudio/dms/mail-data:/var/mail
+      - /mnt/ssd/email-johorstudio/dms/mail-state:/var/mail-state
+      - /mnt/ssd/email-johorstudio/dms/mail-logs:/var/log/mail
+      - /mnt/ssd/email-johorstudio/dms/config:/tmp/docker-mailserver
+      - /etc/localtime:/etc/localtime:ro
+    restart: unless-stopped
+  roundcube:
+    image: roundcube/roundcubemail:1.6.9-apache
+    container_name: roundcube
+    depends_on:
+      - mailserver
+    environment:
+      ROUNDCUBEMAIL_DEFAULT_HOST: ssl://mailserver
+      ROUNDCUBEMAIL_DEFAULT_PORT: "993"
+      ROUNDCUBEMAIL_SMTP_SERVER: tls://mailserver
+      ROUNDCUBEMAIL_SMTP_PORT: "587"
+      ROUNDCUBEMAIL_PRODUCT_NAME: Johor Studio Mail
+      ROUNDCUBEMAIL_DB_TYPE: sqlite
+    ports:
+      - "8100:80"
+    volumes:
+      - /mnt/ssd/email-johorstudio/roundcube/config:/var/roundcube/config
+      - /mnt/ssd/email-johorstudio/roundcube/db:/var/roundcube/db
+    restart: unless-stopped
