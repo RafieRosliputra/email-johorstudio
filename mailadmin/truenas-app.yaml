@@ -1,0 +1,20 @@
+# TrueNAS Custom App "mailadmin". Build the image first:
+#   docker build -t johorstudio-mailadmin:local /mnt/ssd/email-johorstudio/mailadmin
+# Protect mailadmin.johorstudio.com with Cloudflare Access (owner email only).
+services:
+  mailadmin:
+    image: johorstudio-mailadmin:local
+    container_name: mailadmin
+    pull_policy: never
+    restart: unless-stopped
+    environment:
+      ACCOUNTS_FILE: /dms-config/postfix-accounts.cf
+      ALIASES_FILE: /dms-config/postfix-virtual.cf
+      SYNC_EMAIL: noreply@johorstudio.com
+      SYNC_SECRET_FILE: /secrets/noreply.pw
+      DOMAIN: johorstudio.com
+    ports:
+      - "8120:8000"
+    volumes:
+      - /mnt/ssd/email-johorstudio/dms/config:/dms-config
+      - "/mnt/a/storage/website/print purchase/secrets:/secrets"
