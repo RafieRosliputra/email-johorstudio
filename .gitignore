@@ -1,0 +1,6 @@
+# secrets & runtime data — never commit
+mailserver.env
+roundcube/config/config.inc.php
+dms/
+roundcube/db/
+*.log
